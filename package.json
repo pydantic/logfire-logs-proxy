@@ -5,8 +5,7 @@
   "scripts": {
     "format": "prettier --write -- .",
     "lint": "prettier --check -- .",
-    "gen_proto": "./gen_proto.sh",
-    "typecheck": "npm run --workspaces typecheck",
+    "typecheck": "tsc --noEmit",
     "dev": "wrangler dev",
     "cf-typegen": "wrangler types"
   },

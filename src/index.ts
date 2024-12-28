@@ -1,8 +1,18 @@
 import { convert, encodeTraces, decodeLogs } from './otel'
 
+export interface Env {
+  GITHUB_SHA: string
+}
+
 export default {
   async fetch(request, env, ctx): Promise<Response> {
     // console.log(Object.fromEntries(request.headers))
+    const { pathname } = new URL(request.url)
+    if (request.method === 'GET' && pathname === '/') {
+      return new Response(`See https://github.com/pydantic/logfire-logs-proxy for details (commit ${env.GITHUB_SHA}.`)
+    } else if (pathname !== '/v1/logs' || request.method !== 'POST') {
+      return new Response('Only POST requests to `/v1/logs` are supported', { status: 404 })
+    }
 
     const auth = request.headers.get('Authorization')
     if (!auth) {
@@ -36,7 +46,7 @@ export default {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-protobuf',
-        'Authorization': auth,
+        Authorization: auth,
         'User-Agent': `logfire-logs-proxy ${request.headers.get('User-Agent')}`,
       },
       body: encodeTraces(traceRequest),

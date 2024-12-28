@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request: {}
+
+env:
+  COLUMNS: 150
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - uses: actions/setup-node@v4
+
+      - run: npm install
+      - run: ./gen_proto.sh
+
+      - uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --all-files
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          command: deploy --dry-run
+          workingDirectory: src/prod
+
+  deploy:
+    if: "success() && github.ref == 'refs/heads/main'"
+    runs-on: ubuntu-latest
+    needs: [lint]
+    environment: cloudflare-workers-deploy
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+
+      - run: npm install
+      - run: ./gen_proto.sh
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.cloudflare_api_token }}
+          command: deploy --var GITHUB_SHA:${{ github.sha }}

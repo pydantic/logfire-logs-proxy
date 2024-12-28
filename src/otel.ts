@@ -85,7 +85,7 @@ function mapLogRecord(logRecord: ILogRecord): ISpan {
       attributes.push({ key: 'log_body', value: logRecord.body })
     }
   }
-  let {traceId, spanId} = logRecord
+  let { traceId, spanId } = logRecord
   if (!traceId || traceId.length === 0) {
     traceId = generateRand(16)
   }

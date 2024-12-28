@@ -2,3 +2,6 @@ name = "logfire-logs-proxy"
 main = "src/index.ts"
 compatibility_date = "2024-12-24"
 compatibility_flags = ["nodejs_compat"]
+
+[vars]
+GITHUB_SHA = "unknown"
