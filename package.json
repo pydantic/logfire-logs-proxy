@@ -3,17 +3,30 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy",
+    "format": "prettier --write -- .",
+    "lint": "prettier --check -- .",
+    "gen_proto": "./gen_proto.sh",
+    "typecheck": "npm run --workspaces typecheck",
     "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "test": "vitest",
     "cf-typegen": "wrangler types"
   },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false,
+    "trailingComma": "all",
+    "tabWidth": 2,
+    "printWidth": 119,
+    "bracketSpacing": true
+  },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.5.2",
     "@cloudflare/workers-types": "^4.20241224.0",
+    "prettier": "^3.4.2",
+    "protobufjs-cli": "^1.1.3",
     "typescript": "^5.5.2",
-    "vitest": "2.1.8",
     "wrangler": "^3.60.3"
+  },
+  "dependencies": {
+    "@opentelemetry/otlp-transformer": "^0.57.0",
+    "protobufjs": "^7.4.0"
   }
 }

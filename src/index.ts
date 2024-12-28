@@ -1,18 +1,69 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { convert, encodeTraces, decodeLogs } from './otel'
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
-	},
-} satisfies ExportedHandler<Env>;
+  async fetch(request, env, ctx): Promise<Response> {
+    // console.log(Object.fromEntries(request.headers))
+
+    const auth = request.headers.get('Authorization')
+    if (!auth) {
+      return new Response('No "Authorization" header', { status: 401 })
+    }
+
+    let body: ArrayBuffer
+    try {
+      body = await getBody(request)
+    } catch (e) {
+      console.log('Error parsing request body:', e)
+      return new Response(`Error collecting request body: ${e}`, { status: 400 })
+    }
+
+    let logRequest
+    try {
+      logRequest = decodeLogs(body)
+    } catch (e) {
+      console.log('Error parsing protobuf:', e)
+      return new Response(`Error parsing protobuf: ${e}`, { status: 400 })
+    }
+
+    const traceRequest = convert(logRequest)
+    if (!traceRequest || !traceRequest.resourceSpans) {
+      return new Response('no data to proxy', { status: 202 })
+    }
+
+    console.log('Sending trace to logfire')
+    // console.log('Sending trace to logfire', JSON.stringify(traceRequest.resourceSpans, null, 2))
+    const response = await fetch('https://logfire-api.pydantic.dev/v1/traces', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-protobuf',
+        'Authorization': auth,
+        'User-Agent': `logfire-logs-proxy ${request.headers.get('User-Agent')}`,
+      },
+      body: encodeTraces(traceRequest),
+    })
+    if (response.ok) {
+      console.log('Successfully sent trace to logfire')
+      return response
+    } else {
+      const text = await response.text()
+      console.warn('Unexpected response:', { status: response.status, text })
+      return new Response(text, response)
+    }
+  },
+} satisfies ExportedHandler<Env>
+
+async function getBody(request: Request): Promise<ArrayBuffer> {
+  if (request.body === null) {
+    throw new Error('Request body is null')
+  }
+
+  const contentEncoding = (request.headers.get('Content-Encoding') || '').toLowerCase()
+  if (contentEncoding === 'gzip') {
+    const decompressedBodyStream = request.body.pipeThrough(new DecompressionStream('gzip'))
+    return await new Response(decompressedBodyStream).arrayBuffer()
+  } else if (contentEncoding) {
+    throw new Error('Unsupported content encoding')
+  } else {
+    return await request.arrayBuffer()
+  }
+}
