@@ -30,8 +30,7 @@ jobs:
 
       - uses: cloudflare/wrangler-action@v3
         with:
-          command: deploy --dry-run
-          workingDirectory: src/prod
+          command: deploy --dry-run --var GITHUB_SHA:${{ github.sha }}
 
   deploy:
     if: "success() && github.ref == 'refs/heads/main'"
