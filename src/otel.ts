@@ -68,20 +68,28 @@ type ISpan = opentelemetry.proto.trace.v1.ISpan
 
 function mapLogRecord(logRecord: ILogRecord): ISpan {
   // console.log(logRecord)
-  const time = logRecord.observedTimeUnixNano || logRecord.timeUnixNano
+  const time = logRecord.timeUnixNano || logRecord.observedTimeUnixNano
   const attributes = logRecord.attributes || []
+  attributes.push({ key: 'logfire.span_type', value: { stringValue: 'log' } })
   if (logRecord.severityNumber) {
     attributes.push({ key: 'logfire.level_num', value: { intValue: logRecord.severityNumber } })
   }
   if (logRecord.eventName) {
     attributes.push({ key: 'log_event_name', value: { stringValue: logRecord.eventName } })
   }
-  let name: string | null = null
+  if (logRecord.timeUnixNano) {
+    attributes.push({ key: 'TimeUnixNano', value: { intValue: logRecord.timeUnixNano } })
+  }
+  if (logRecord.observedTimeUnixNano) {
+    attributes.push({ key: 'ObservedTimestampUnixNano', value: { intValue: logRecord.observedTimeUnixNano } })
+  }
+  let name: string = 'unknown log'
 
   if (logRecord.body) {
     if (logRecord.body.stringValue) {
       name = logRecord.body.stringValue
     } else {
+      name = JSON.stringify(logRecord.body)
       attributes.push({ key: 'log_body', value: logRecord.body })
     }
   }
@@ -99,15 +107,25 @@ function mapLogRecord(logRecord: ILogRecord): ISpan {
     startTimeUnixNano: time,
     endTimeUnixNano: time,
     attributes,
-    name,
+    name: truncate(name),
     droppedAttributesCount: logRecord.droppedAttributesCount,
     flags: logRecord.flags,
   }
 }
 
 /// generate a random traceID or spanID
-export function generateRand(bytes: number): Uint8Array {
+function generateRand(bytes: number): Uint8Array {
   const array = new Uint8Array(bytes)
   crypto.getRandomValues(array)
   return array
+}
+
+const MAX_LENGTH = 120
+
+function truncate(text: string): string {
+  if (text.length <= MAX_LENGTH) {
+    return text
+  } else {
+    return text.slice(0, MAX_LENGTH) + '…'
+  }
 }
