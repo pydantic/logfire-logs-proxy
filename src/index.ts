@@ -9,7 +9,7 @@ export default {
     // console.log(Object.fromEntries(request.headers))
     const { pathname } = new URL(request.url)
     if (request.method === 'GET' && pathname === '/') {
-      return new Response(`See https://github.com/pydantic/logfire-logs-proxy for details (commit ${env.GITHUB_SHA}.`)
+      return new Response(`See https://github.com/pydantic/logfire-logs-proxy for details (commit ${env.GITHUB_SHA}).`)
     } else if (pathname !== '/v1/logs' || request.method !== 'POST') {
       return new Response('Only POST requests to `/v1/logs` are supported', { status: 404 })
     }

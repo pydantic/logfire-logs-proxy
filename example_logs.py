@@ -34,10 +34,13 @@ logger_provider = LoggerProvider(
 )
 set_logger_provider(logger_provider)
 
+endpoint = 'https://logfire-logs-proxy.pydantic.workers.dev/v1/logs'
+# to run against a worker running locally
+# endpoint = 'http://localhost:8787/v1/logs'
 LOGFIRE_TOKEN = os.environ['LOGFIRE_TOKEN']
 compression = Compression.Gzip
 exporter = OTLPLogExporter(
-    endpoint='http://localhost:8787/v1/logs',
+    endpoint=endpoint,
     headers={'Authorization': f'Bearer {LOGFIRE_TOKEN}'},
     compression=compression
 )
@@ -51,7 +54,7 @@ logger2 = logging.getLogger('myapp.area2')
 
 logger1.debug('debug %d', 41)
 logger1.info('info %d, compression=%s', 42, compression)
-logger1.warning('warning %d', 43)
+logger1.warning('warning endpoint=%s', endpoint)
 logger1.error('error %d', 44)
 
 
