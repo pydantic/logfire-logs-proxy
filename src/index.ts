@@ -68,12 +68,11 @@ async function getBody(request: Request): Promise<ArrayBuffer> {
   }
 
   const contentEncoding = (request.headers.get('Content-Encoding') || '').toLowerCase()
-  if (contentEncoding === 'gzip') {
-    const decompressedBodyStream = request.body.pipeThrough(new DecompressionStream('gzip'))
-    return await new Response(decompressedBodyStream).arrayBuffer()
+  let body = request.body
+  if (contentEncoding === 'gzip' || contentEncoding === 'deflate') {
+    body = body.pipeThrough(new DecompressionStream(contentEncoding))
   } else if (contentEncoding) {
-    throw new Error('Unsupported content encoding')
-  } else {
-    return await request.arrayBuffer()
+    throw new Error(`Unsupported content encoding "${contentEncoding}"`)
   }
+  return await new Response(body).arrayBuffer()
 }

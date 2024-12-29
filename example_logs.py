@@ -16,7 +16,7 @@ import logging
 
 from opentelemetry import trace
 from opentelemetry._logs import set_logger_provider
-from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter, Compression
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
@@ -35,9 +35,11 @@ logger_provider = LoggerProvider(
 set_logger_provider(logger_provider)
 
 LOGFIRE_TOKEN = os.environ['LOGFIRE_TOKEN']
+compression = Compression.Gzip
 exporter = OTLPLogExporter(
     endpoint='http://localhost:8787/v1/logs',
-    headers={'Authorization': f'Bearer {LOGFIRE_TOKEN}'}
+    headers={'Authorization': f'Bearer {LOGFIRE_TOKEN}'},
+    compression=compression
 )
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 handler = LoggingHandler(level=logging.DEBUG, logger_provider=logger_provider)
@@ -48,7 +50,7 @@ logger1 = logging.getLogger('myapp.area1')
 logger2 = logging.getLogger('myapp.area2')
 
 logger1.debug('debug %d', 41)
-logger1.info('info %d', 42)
+logger1.info('info %d, compression=%s', 42, compression)
 logger1.warning('warning %d', 43)
 logger1.error('error %d', 44)
 
