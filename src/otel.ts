@@ -93,17 +93,18 @@ function mapLogRecord(logRecord: ILogRecord): ISpan {
       attributes.push({ key: 'log_body', value: logRecord.body })
     }
   }
-  let { traceId, spanId } = logRecord
+  let { traceId, spanId: parentSpanId } = logRecord
   if (!traceId || traceId.length === 0) {
     traceId = generateRand(16)
   }
-  if (!spanId || spanId.length === 0) {
-    spanId = generateRand(8)
+  if (parentSpanId && parentSpanId.length === 0) {
+    parentSpanId = null
   }
 
   return {
     traceId,
-    spanId,
+    spanId: generateRand(8),
+    parentSpanId,
     startTimeUnixNano: time,
     endTimeUnixNano: time,
     attributes,
