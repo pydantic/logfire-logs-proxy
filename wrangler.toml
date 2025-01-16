@@ -8,3 +8,7 @@ enabled = true
 
 [vars]
 GITHUB_SHA = "unknown"
+
+[env.staging]
+name = "logfire-logs-proxy-staging"
+vars = { GITHUB_SHA = "staging" }
