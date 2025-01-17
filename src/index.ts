@@ -15,7 +15,7 @@ export default {
     } else if (pathname === '/v1/traces' && request.method === 'POST') {
       return await traceProxy(request)
     } else if (pathname === '/v1/traces' && request.method === 'OPTIONS') {
-      return tracePreflight()
+      return tracePreflight(request)
     } else {
       return new Response(`404: '${request.method} ${pathname}' not found`, { status: 404 })
     }
@@ -86,20 +86,40 @@ async function traceProxy(request: Request): Promise<Response> {
     statusText: response.statusText,
     headers: {
       ...Object.fromEntries(response.headers),
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': allowOrigin(request),
     },
   })
 }
 
-const tracePreflight = () =>
+const tracePreflight = (request: Request) =>
   new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': allowOrigin(request),
       'Access-Control-Allow-Methods': 'POST',
       'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     },
   })
+
+function allowOrigin(request: Request): string {
+  const origin = request.headers.get('Origin')
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    // if the origin is one of the allowed origins, return that to allow requests for that origin
+    return origin
+  } else {
+    // otherwise we return the default origin to prevent requests from other origins
+    return DEFAULT_ALLOW_ORIGIN
+  }
+}
+
+const DEFAULT_ALLOW_ORIGIN = 'https://logfire.run'
+const ALLOWED_ORIGINS = new Set([
+  'http://localhost:8000',
+  'http://localhost:8787',
+  'http://localhost:8788',
+  'https://logfire.run',
+  'https://pydantic.run',
+])
 
 async function getBody(request: Request): Promise<ArrayBuffer> {
   if (request.body === null) {
