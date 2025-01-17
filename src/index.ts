@@ -103,23 +103,14 @@ const tracePreflight = (request: Request) =>
 
 function allowOrigin(request: Request): string {
   const origin = request.headers.get('Origin')
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
-    // if the origin is one of the allowed origins, return that to allow requests for that origin
+  if (origin && origin.startsWith('http://localhost:')) {
+    // allow all localhost ports
     return origin
   } else {
-    // otherwise we return the default origin to prevent requests from other origins
-    return DEFAULT_ALLOW_ORIGIN
+    // otherwise do the simple thing and allow just https://logfire.run
+    return 'https://logfire.run'
   }
 }
-
-const DEFAULT_ALLOW_ORIGIN = 'https://logfire.run'
-const ALLOWED_ORIGINS = new Set([
-  'http://localhost:8000',
-  'http://localhost:8787',
-  'http://localhost:8788',
-  'https://logfire.run',
-  'https://pydantic.run',
-])
 
 async function getBody(request: Request): Promise<ArrayBuffer> {
   if (request.body === null) {
