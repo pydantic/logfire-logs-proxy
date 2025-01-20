@@ -107,8 +107,8 @@ function allowOrigin(request: Request): string {
     // allow all localhost ports
     return origin
   } else {
-    // otherwise do the simple thing and allow just https://logfire.run
-    return 'https://logfire.run'
+    // otherwise do the simple thing and allow just https://pydantic.run
+    return 'https://pydantic.run'
   }
 }
 
