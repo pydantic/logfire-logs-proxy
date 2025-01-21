@@ -106,6 +106,9 @@ function allowOrigin(request: Request): string {
   if (origin && origin.startsWith('http://localhost:')) {
     // allow all localhost ports
     return origin
+  } else if (origin && origin.endsWith('.pydantic.workers.dev')) {
+    // allow all pydantic.workers.dev subdomains
+    return origin
   } else {
     // otherwise do the simple thing and allow just https://pydantic.run
     return 'https://pydantic.run'
