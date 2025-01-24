@@ -99,7 +99,7 @@ const preflight = (request: Request) =>
     headers: {
       'Access-Control-Allow-Origin': allowOrigin(request),
       'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+      'Access-Control-Allow-Headers': request.headers.get('Access-Control-Allow-Headers') || '',
     },
   })
 
