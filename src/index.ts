@@ -12,12 +12,12 @@ export default {
       return new Response(index_html(env), { headers: { 'Content-Type': 'text/html' } })
     } else if (pathname === '/v1/logs' && request.method === 'POST') {
       return await logProxy(request)
-    } else if (pathname === '/v1/traces' && request.method === 'POST') {
-      return await traceProxy(request)
-    } else if (pathname === '/v1/traces' && request.method === 'OPTIONS') {
-      return tracePreflight(request)
-    } else if (pathname === '/v1/info') {
-      return await fetch(`https://logfire-api.pydantic.dev${pathname}`, request)
+    } else if (pathname.startsWith('/v1/')) {
+      if (request.method === 'OPTIONS') {
+        return preflight(request)
+      } else {
+        return await pureProxy(request, pathname)
+      }
     } else {
       return new Response(`404: '${request.method} ${pathname}' not found`, { status: 404 })
     }
@@ -80,8 +80,8 @@ async function logProxy(request: Request): Promise<Response> {
   }
 }
 
-async function traceProxy(request: Request): Promise<Response> {
-  const response = await fetch('https://logfire-api.pydantic.dev/v1/traces', request)
+async function pureProxy(request: Request, pathname: string): Promise<Response> {
+  const response = await fetch(`https://logfire-api.pydantic.dev${pathname}`, request)
   // add CORS headers
   return new Response(response.body, {
     status: response.status,
@@ -93,7 +93,7 @@ async function traceProxy(request: Request): Promise<Response> {
   })
 }
 
-const tracePreflight = (request: Request) =>
+const preflight = (request: Request) =>
   new Response(null, {
     status: 204,
     headers: {
