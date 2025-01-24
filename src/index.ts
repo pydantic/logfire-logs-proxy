@@ -16,6 +16,8 @@ export default {
       return await traceProxy(request)
     } else if (pathname === '/v1/traces' && request.method === 'OPTIONS') {
       return tracePreflight(request)
+    } else if (pathname === '/v1/info') {
+      return await fetch(`https://logfire-api.pydantic.dev${pathname}`, request)
     } else {
       return new Response(`404: '${request.method} ${pathname}' not found`, { status: 404 })
     }
