@@ -82,15 +82,10 @@ async function logProxy(request: Request): Promise<Response> {
 
 async function pureProxy(request: Request, pathname: string): Promise<Response> {
   const response = await fetch(`https://logfire-api.pydantic.dev${pathname}`, request)
-  // add CORS headers
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: {
-      ...Object.fromEntries(response.headers),
-      'Access-Control-Allow-Origin': allowOrigin(request),
-    },
-  })
+  if (!response.headers.has('Access-Control-Allow-Origin')) {
+    response.headers.set('Access-Control-Allow-Origin', allowOrigin(request))
+  }
+  return response
 }
 
 const preflight = (request: Request) =>
