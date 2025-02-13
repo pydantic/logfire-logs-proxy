@@ -8,10 +8,18 @@ export default {
   async fetch(request, env, ctx): Promise<Response> {
     // console.log(Object.fromEntries(request.headers))
     const { pathname } = new URL(request.url)
-    if (request.method === 'GET' && pathname === '/') {
-      return new Response(index_html(env), { headers: { 'Content-Type': 'text/html' } })
-    } else if (pathname === '/v1/logs' && request.method === 'POST') {
-      return await logProxy(request)
+    if (pathname === '/') {
+      if (request.method === 'GET') {
+        return new Response(index_html(env), { headers: { 'Content-Type': 'text/html' } })
+      } else {
+        return wrongMethod(request, 'GET')
+      }
+    } else if (pathname === '/v1/logs') {
+      if (request.method === 'POST') {
+        return await logProxy(request)
+      } else {
+        return wrongMethod(request, 'POST')
+      }
     } else if (pathname.startsWith('/v1/')) {
       if (request.method === 'OPTIONS') {
         return preflight(request)
@@ -131,4 +139,14 @@ async function getBody(request: Request): Promise<ArrayBuffer> {
     throw new Error(`Unsupported content encoding "${contentEncoding}"`)
   }
   return await new Response(body).arrayBuffer()
+}
+
+function wrongMethod(request: Request, allow: string): Response {
+  const msg = `405: '${request.method} ${request.url}' method not allowed
+
+Expected ${allow} request, see https://github.com/pydantic/logfire-logs-proxy for details`
+  return new Response(msg, {
+    status: 405,
+    headers: { allow },
+  })
 }
