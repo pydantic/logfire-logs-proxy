@@ -69,7 +69,7 @@ async function logProxy(request: Request): Promise<Response> {
 
   console.log('Sending trace to logfire')
   // console.log('Sending trace to logfire', JSON.stringify(traceRequest.resourceSpans, null, 2))
-  const response = await fetch('https://logfire-api.pydantic.dev/v1/traces', {
+  const response = await fetch(`${getBaseUrlFromToken(request)}/v1/traces`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-protobuf',
@@ -89,7 +89,7 @@ async function logProxy(request: Request): Promise<Response> {
 }
 
 async function pureProxy(request: Request, pathname: string): Promise<Response> {
-  const response = await fetch(`https://logfire-api.pydantic.dev${pathname}`, request)
+  const response = await fetch(`${getBaseUrlFromToken(request)}${pathname}`, request)
   const headers = new Headers(response.headers)
   if (!headers.has('Access-Control-Allow-Origin')) {
     headers.set('Access-Control-Allow-Origin', allowOrigin(request))
@@ -149,4 +149,14 @@ Expected ${allow} request, see https://github.com/pydantic/logfire-logs-proxy fo
     status: 405,
     headers: { allow },
   })
+}
+
+const TOKEN_PATTERN = /^pylf_v[0-9]+_([a-z]+)_[a-zA-Z0-9]+$/
+
+function getBaseUrlFromToken(request: Request): string {
+  let token = request.headers.get('Authorization') || ''
+  token = token.replace(/^Bearer /, '')
+  const match = token.match(TOKEN_PATTERN)
+  const region = match ? match[1] : 'us'
+  return `https://logfire-${region}.pydantic.dev`
 }
