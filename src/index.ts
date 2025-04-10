@@ -32,8 +32,10 @@ export default {
   },
 } satisfies ExportedHandler<Env>
 
+const msg = 'This proxy service will soon be switched off, please use the standard endpoints'
 const index_html = (env: Env) => `
 <h1>logfire-logs-proxy</h1>
+${msg}
 <p>
   See <a href="https://github.com/pydantic/logfire-logs-proxy">github.com/pydantic/logfire-logs-proxy</a>
   for details (commit <code>${env.GITHUB_SHA}</code>).
@@ -80,7 +82,7 @@ async function logProxy(request: Request): Promise<Response> {
   })
   if (response.ok) {
     console.log('Successfully sent trace to logfire')
-    return response
+    return new Response(msg, { status: 410 })
   } else {
     const text = await response.text()
     console.warn('Unexpected response:', { status: response.status, text })
@@ -94,11 +96,7 @@ async function pureProxy(request: Request, pathname: string): Promise<Response> 
   if (!headers.has('Access-Control-Allow-Origin')) {
     headers.set('Access-Control-Allow-Origin', allowOrigin(request))
   }
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  })
+  return new Response(msg, { status: 410 })
 }
 
 const preflight = (request: Request) =>

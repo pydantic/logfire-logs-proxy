@@ -1,5 +1,7 @@
 # logfire-logs-proxy
 
+**This proxy service will soon be switched off, please use the standard endpoints**
+
 Proxy for sending OTel logs to [Logfire](https://pydantic.dev/logfire).
 
 Run as a CloudFlare Worker.
