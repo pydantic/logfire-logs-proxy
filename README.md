@@ -1,6 +1,6 @@
 # logfire-logs-proxy
 
-**This proxy service will soon be switched off, please use the standard endpoints**
+**This proxy service hass been switched off, please use the standard endpoints which now accept OTel logs**
 
 Proxy for sending OTel logs to [Logfire](https://pydantic.dev/logfire).
 
